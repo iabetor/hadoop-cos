@@ -19,7 +19,7 @@ import java.util.List;
  */
 @InterfaceAudience.Private
 @InterfaceStability.Stable
-interface NativeFileSystemStore {
+public interface NativeFileSystemStore {
 
     void initialize(URI uri, Configuration conf) throws IOException;
 
@@ -32,11 +32,11 @@ interface NativeFileSystemStore {
 
     CompleteMultipartUploadResult completeMultipartUpload(String key,
                                                           String uploadId,
-                                                          List<PartETag> partETagList);
+                                                          List<PartETag> partETagList) throws IOException;
 
-    void abortMultipartUpload(String key, String uploadId);
+    void abortMultipartUpload(String key, String uploadId) throws IOException;
 
-    String getUploadId(String key);
+    String getUploadId(String key) throws IOException;
 
     PartETag uploadPart(File file, String key, String uploadId, int partNum, byte[] md5hash) throws IOException;
 
@@ -44,6 +44,16 @@ interface NativeFileSystemStore {
                         int partNum, long partSize, byte[] md5hash) throws IOException;
 
     FileMetadata retrieveMetadata(String key) throws IOException;
+
+    byte[] retrieveAttribute(String key, String attribute) throws IOException;
+
+    void storeDirAttribute(String key, String attribute, byte[] value) throws IOException;
+
+    void storeFileAttribute(String key, String attribute, byte[] value) throws IOException;
+
+    void removeDirAttribute(String key, String attribute) throws IOException;
+
+    void removeFileAttribute(String key, String attribute) throws IOException;
 
     InputStream retrieve(String key) throws IOException;
 

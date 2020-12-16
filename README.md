@@ -13,17 +13,22 @@ Linux 或 Windows 系统
 ### 软件依赖
 Hadoop-2.6.0及以上版本
 
+**NOTE**：
+1. 目前hadoop-cos已经正式被Apache Hadoop-3.3.0官方集成：https://hadoop.apache.org/docs/r3.3.0/hadoop-cos/cloud-storage/index.html。
+2. 在Apache Hadoop-3.3.0 之前版本或CDH集成Hadoop-cos jar 包后，需要重启NameNode才能加载到jar包。。
+3. 需要编译具体Hadoop版本的jar包可更改pom文件中hadoop.version进行编译。
+
 ## 安装方法
 
-### 获取 hadoop-cos 插件
-下载地址：[hadoop-cos 插件](https://github.com/tencentyun/hadoop-cos)
+### 获取 hadoop-cos 分发包及其依赖
+下载地址：[hadoop-cos release](https://github.com/tencentyun/hadoop-cos/releases)
 
 
-### 安装hadoop-cos插件
+### 安装hadoop-cos
 
-1. 将dep目录下的hadoop-cos-X.X.X-shaded.jar 拷贝到 `$HADOOP_HOME/share/hadoop/tools/lib`下。
+1. 将hadoop-cos-{hadoop.version}-x.x.x.jar和cos_api-bundle-5.x.x.jar 拷贝到 `$HADOOP_HOME/share/hadoop/tools/lib`下。
 
-NOTE: 根据hadoop的具体版本选择对应的jar包，若dep目录中没有提供匹配版本的jar包，可自行通过修改pom文件中hadoop版本号，重新编译生成。
+NOTE: 根据hadoop的具体版本选择对应的jar包，若release中没有提供匹配版本的jar包，可自行通过修改pom文件中hadoop版本号，重新编译生成。
 
 2. 修改 hadoop_env.sh
 在 `$HADOOP_HOME/etc/hadoop`目录下，进入 hadoop_env.sh，增加如下内容，将 cosn 相关 jar 包加入 Hadoop 环境变量：
@@ -208,8 +213,8 @@ done
 
 | 属性键                             | 说明                | 默认值 | 必填项 |
 |:-----------------------------------:|:--------------------|:-----:|:---:|
-|fs.defaultFS                       | 配置hadoop默认使用的底层文件系统，如果想使用cos作为hadoop默认文件系统，则此项应设置为cosn://bucket-appid，此时可以通过文件路径访问cos对象，如/hadoop/inputdata/test.dat。若不想把cos作为hadoop默认文件系统，则不需要修改此项，当需要访问cos上的对象时，则指定完整的uri即可，如cosn://testbucket-1252681927/hadoop/inputdata/test.dat来访问。
-|fs.cosn.credentials.provider       |配置secret id和secret key的获取方式。当前支持三种获取方式：1.org.apache.hadoop.fs.auth.SessionCredentialProvider：从请求URI中获取secret id和secret key，其格式为：cosn://{secretId}:{secretKey}@examplebucket-1250000000000/; 2.org.apache.hadoop.fs.auth.SimpleCredentialProvider：从core-site.xml配置文件中读取fs.cosn.userinfo.secretId和fs.cosn.userinfo.secretKey来获取secret id和secret key; 3.org.apache.hadoop.fs.auth.EnvironmentVariableCredentialProvider：从系统环境变量COS_SECRET_ID和COS_SECRET_KEY中获取；4.org.apache.hadoop.fs.auth.CVMInstanceCredentialsProvider：利用腾讯云云服务器（CVM）绑定的角色，获取访问COS的临时密钥; 5. org.apache.hadoop.fs.auth.CPMInstanceCredentialsProvider：利用腾讯云黑石物理机（CPM）绑定的角色，获取访问COS的临时密钥。|如果不指定改配置项，默认会按照以下顺序读取：1.org.apache.hadoop.fs.auth.SessionCredentialProvider; 2.org.apache.hadoop.fs.auth.SimpleCredentialProvider；3.org.apache.hadoop.fs.auth.EnvironmentVariableCredentialProvider; 4.org.apache.hadoop.fs.auth.CVMInstanceCredentialsProvider; 5.org.apache.hadoop.fs.auth.CPMInstanceCredentialsProvider|否|
+|fs.defaultFS                      | 配置hadoop默认使用的底层文件系统，如果想使用cos作为hadoop默认文件系统，则此项应设置为cosn://bucket-appid，此时可以通过文件路径访问cos对象，如/hadoop/inputdata/test.dat。若不想把cos作为hadoop默认文件系统，则不需要修改此项，当需要访问cos上的对象时，则指定完整的uri即可，如cosn://testbucket-1252681927/hadoop/inputdata/test.dat来访问。|
+|fs.cosn.credentials.provider       |配置secret id和secret key的获取方式。当前支持三种获取方式：1.org.apache.hadoop.fs.auth.SessionCredentialProvider：从请求URI中获取secret id和secret key，其格式为：cosn://{secretId}:{secretKey}@examplebucket-1250000000000/; 2.org.apache.hadoop.fs.auth.SimpleCredentialProvider：从core-site.xml配置文件中读取fs.cosn.userinfo.secretId和fs.cosn.userinfo.secretKey来获取secret id和secret key; 3.org.apache.hadoop.fs.auth.EnvironmentVariableCredentialProvider：从系统环境变量COS_SECRET_ID和COS_SECRET_KEY中获取；4.org.apache.hadoop.fs.auth.SessionTokenCredentialProvider: 设置token；5.org.apache.hadoop.fs.auth.CVMInstanceCredentialsProvider：利用腾讯云云服务器（CVM）绑定的角色，获取访问COS的临时密钥; 6. org.apache.hadoop.fs.auth.CPMInstanceCredentialsProvider：利用腾讯云黑石物理机（CPM）绑定的角色，获取访问COS的临时密钥。7. org.apache.hadoop.fs.auth.RangerCredentialsProvider 使用ranger进行获取秘钥 |如果不指定改配置项，默认会按照以下顺序读取：1.org.apache.hadoop.fs.auth.SessionCredentialProvider; 2.org.apache.hadoop.fs.auth.SimpleCredentialProvider;3.org.apache.hadoop.fs.auth.EnvironmentVariableCredentialProvider;4.org.apache.hadoop.fs.auth.SessionTokenCredentialProvider；5.org.apache.hadoop.fs.auth.CVMInstanceCredentialsProvider;6.org.apache.hadoop.fs.auth.CPMInstanceCredentialsProvider|否|
 |fs.cosn.useHttps|配置是否使用https协议。|false|否|
 |fs.cosn.bucket.endpoint_suffix|指定要连接的COS endpoint，该项为非必填项目。对于公有云COS用户而言，只需要正确填写上述的region配置即可。兼容原配置项：fs.cosn.userinfo.endpoint_suffix。|无|否|
 |fs.cosn.userinfo.secretId/secretKey| 填写您账户的API 密钥信息。可通过 [云 API 密钥 控制台](https://console.cloud.tencent.com/capi) 查看。| 无  | 是|
@@ -222,7 +227,7 @@ done
 |fs.cosn.upload.buffer.size        | CosN文件系统上传时依赖的缓冲区大小，如果指定为-1，则表示不限制。若不限制缓冲区大小，则缓冲区类型必须为mapped_disk。如果指定大小大于0，则要求该值至少大于等于一个block的大小。兼容原配置项：fs.cosn.buffer.size。| 134217728（128MB）|否|
 |fs.cosn.upload.part.size          | 分块上传时每个part的大小。由于 COS 的分块上传最多只能支持10000块，因此需要预估最大可能使用到的单文件大小。例如，part size 为8MB时，最大能够支持78GB的单文件上传。 part size 最大可以支持到2GB，即单文件最大可支持19TB。| 8388608（8MB）| 否 |
 |fs.cosn.upload_thread_pool        | 文件流式上传到COS时，并发上传的线程数目 | 8 | 否|
-|fs.cosn.copy_thread_pool 		   | 目录拷贝操作时，可用于并发拷贝文件的线程数目 | 3 | 否 |
+|fs.cosn.copy_thread_pool 		   | 目录拷贝操作时，可用于并发拷贝和删除文件的线程数目 | 3 | 否 |
 |fs.cosn.read.ahead.block.size     | 预读块的大小                                 | ‭1048576‬（1MB） |  否 |
 |fs.cosn.read.ahead.queue.size     | 预读队列的长度                               | 8              | 否  |
 |fs.cosn.maxRetries                | 访问COS出现错误时，最多重试的次数 | 200 | 否 |
@@ -232,6 +237,7 @@ done
 |fs.cosn.server-side-encryption.algorithm | 配置COS服务端加密算法，支持SSE-C和SSE-COS，默认为空，不加密| 无 | 否|
 |fs.cosn.server-side-encryption.key | 当开启COS的SSE-C服务端加密算法时，必须配置SSE-C的密钥，密钥格式为base64编码的AES-256密钥，默认为空，不加密| 无 | 否|
 |fs.cosn.crc64.checksum.enabled    | 是否开启CRC64校验。默认不开启，此时无法使用`hadoop fs -checksum`命令获取文件的CRC64校验值。| false | 否 |
+|fs.cosn.crc32c.checksum.enabled    | 是否开启CRC32c校验。默认不开启，此时无法使用hadoop fs -checksum命令获取文件的CRC32C校验值。只能开启一种校验方式| false | 否 |
 |fs.cosn.traffic.limit | 上传下载带宽的控制选项，819200 ~ 838860800，单位为bits/s。默认值为-1，表示不限制。 | -1 | 否 |
 |fs.cosn.use.l5.enable | 配置是否使用L5。 | false | 否 |
 |fs.cosn.bucket.l5     | L5配置项，格式为modid,cmdid | 无 | 否 |

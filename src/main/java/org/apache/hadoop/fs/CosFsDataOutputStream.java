@@ -41,6 +41,17 @@ public class CosFsDataOutputStream extends OutputStream {
     private WriteConsistencyChecker writeConsistencyChecker = null;
     private boolean closed = false;
 
+    /**
+     * Output stream
+     *
+     * @param conf config
+     * @param store native file system
+     * @param key cos key
+     * @param blockSize block config size
+     * @param executorService thread executor
+     * @param checksEnabled check flag
+     * @throws IOException
+     */
     public CosFsDataOutputStream(
             Configuration conf,
             NativeFileSystemStore store,
@@ -72,29 +83,17 @@ public class CosFsDataOutputStream extends OutputStream {
         this.executorService =
                 MoreExecutors.listeningDecorator(executorService);
 
-        try {
-            this.currentBlockBuffer =
-                    BufferPool.getInstance().getBuffer((int) this.blockSize);
-        } catch (InterruptedException e) {
-            String exceptionMsg = String.format("Getting a buffer size:[%d] " +
-                            "from the buffer pool occurs an exception.",
-                    this.blockSize);
-            throw new IOException(exceptionMsg);
-        }
-        try {
-            this.digest = MessageDigest.getInstance("MD5");
-            this.currentBlockOutputStream = new DigestOutputStream(
-                    new BufferOutputStream(this.currentBlockBuffer),
-                    this.digest);
-        } catch (NoSuchAlgorithmException e) {
-            this.digest = null;
-            this.currentBlockOutputStream =
-                    new BufferOutputStream(this.currentBlockBuffer);
-        }
+        // malloc when trigger the write operations
+        this.currentBlockBuffer = null;
+        this.currentBlockOutputStream = null;
     }
 
     @Override
     public void flush() throws IOException {
+        // create but not call write before
+        if (this.currentBlockOutputStream == null) {
+            initCurrentBlock();
+        }
         this.currentBlockOutputStream.flush();
     }
 
@@ -103,6 +102,11 @@ public class CosFsDataOutputStream extends OutputStream {
         if (this.closed) {
             return;
         }
+
+        if (this.currentBlockOutputStream == null) {
+            initCurrentBlock();
+        }
+
         try {
             this.currentBlockOutputStream.flush();
             this.currentBlockOutputStream.close();
@@ -180,6 +184,8 @@ public class CosFsDataOutputStream extends OutputStream {
             this.blockWritten = 0;
             this.closed = true;
             this.writeConsistencyChecker = null;
+            this.currentBlockBuffer = null;
+            this.currentBlockOutputStream = null;
         }
     }
 
@@ -196,8 +202,6 @@ public class CosFsDataOutputStream extends OutputStream {
                 future.cancel(true);
             }
             (store).abortMultipartUpload(this.key, this.uploadId);
-            LOG.error("Multipart upload with id: {} to {}.", this.uploadId,
-                    this.key);
             String exceptionMsg = String.format("multipart upload with id: %s" +
                     " to %s.", this.uploadId, this.key);
             throw new IOException(exceptionMsg);
@@ -214,7 +218,7 @@ public class CosFsDataOutputStream extends OutputStream {
 
         this.currentBlockId++;
         LOG.debug("upload part blockId: {}, uploadId: {}.", this.currentBlockId, this.uploadId);
-        byte[] md5Hash = this.digest == null ? null : this.digest.digest();
+        final byte[] md5Hash = this.digest == null ? null : this.digest.digest();
         ListenableFuture<PartETag> partETagListenableFuture =
                 this.executorService.submit(new Callable<PartETag>() {
                     private final CosNByteBuffer buffer = currentBlockBuffer;
@@ -266,6 +270,10 @@ public class CosFsDataOutputStream extends OutputStream {
             throw new IOException("block stream has been closed.");
         }
 
+        if (this.currentBlockOutputStream == null) {
+            initCurrentBlock();
+        }
+
         while (len > 0) {
             long writeBytes = 0;
             if (this.blockWritten + len > this.blockSize) {
@@ -299,6 +307,10 @@ public class CosFsDataOutputStream extends OutputStream {
             throw new IOException("block stream has been closed.");
         }
 
+        if (this.currentBlockOutputStream == null) {
+            initCurrentBlock();
+        }
+
         byte[] singleBytes = new byte[1];
         singleBytes[0] = (byte) b;
         this.currentBlockOutputStream.write(singleBytes, 0, 1);
@@ -309,6 +321,30 @@ public class CosFsDataOutputStream extends OutputStream {
                 this.writeConsistencyChecker.incrementWrittenBytes(blockWritten);
             }
             this.blockWritten = 0;
+        }
+    }
+
+    // init current block buffer and output stream when occur the write operation.
+    private void initCurrentBlock() throws IOException {
+        // get the buffer
+        try {
+            this.currentBlockBuffer = BufferPool.getInstance().getBuffer((int) this.blockSize);
+        } catch (InterruptedException e) {
+            String exceptionMsg = String.format("Getting a buffer size:[%d] " +
+                            "from the buffer pool occurs an exception.",
+                    this.blockSize);
+            throw new IOException(exceptionMsg);
+        }
+        // init the stream
+        try {
+            this.digest = MessageDigest.getInstance("MD5");
+            this.currentBlockOutputStream = new DigestOutputStream(
+                    new BufferOutputStream(this.currentBlockBuffer),
+                    this.digest);
+        } catch (NoSuchAlgorithmException e) {
+            this.digest = null;
+            this.currentBlockOutputStream =
+                    new BufferOutputStream(this.currentBlockBuffer);
         }
     }
 }

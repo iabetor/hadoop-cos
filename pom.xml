@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.apache.hadoop</groupId>
+    <groupId>com.qcloud.cos</groupId>
     <artifactId>hadoop-cos</artifactId>
-    <version>2.8.5</version>
+    <version>5.9.0</version>
     <packaging>jar</packaging>
 
     <name>Apache Hadoop Tencent Qcloud COS Support</name>
@@ -14,106 +14,55 @@
         This module contains code to support integration with Tencent Qcloud COS.
         It also declares the dependencies needed to work with COS.
     </description>
+    <url>https://github.com/tencentyun/hadoop-cos</url>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <hadoop.version>2.8.5</hadoop.version>
-        <cos_api.version>5.6.15</cos_api.version>
-        <google.guava.version>23.6-jre</google.guava.version>
-        <commons_lang3.version>3.1</commons_lang3.version>
-        <junit.version>4.8</junit.version>
-        <downloadSources>true</downloadSources>
-    </properties>
+    <licenses>
+        <license>
+            <name>hadoop-cos</name>
+            <url>https://github.com/tencentyun/hadoop-cos</url>
+        </license>
+    </licenses>
 
+    <developers>
+        <developer>
+            <name>iainyu</name>
+            <email>iainyu@tencent.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/tencentyun/hadoop-cos</connection>
+        <developerConnection>scm:git:https://github.com/tencentyun/hadoop-cos</developerConnection>
+        <url>https://github.com/tencentyun/hadoop-cos</url>
+    </scm>
+
+  <distributionManagement>
+        <repository>
+            <id>oss</id>
+            <name>hadoop-cos</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+
+        <snapshotRepository>
+            <id>oss</id>
+            <name>hadoop-cos</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
     <dependencies>
+        <dependency>
+            <groupId>com.qcloud</groupId>
+            <artifactId>cos_api-bundle</artifactId>
+            <version>${cos_api.version}</version>
+            <scope>compile</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
             <scope>provided</scope>
-            <exclusions>
-
-                <exclusion>
-                    <groupId>commons-collections</groupId>
-                    <artifactId>commons-collections</artifactId>
-                </exclusion>
-
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-
-                <exclusion>
-                    <artifactId>httpclient</artifactId>
-                    <groupId>org.apache.httpcomponents</groupId>
-                </exclusion>
-
-                <exclusion>
-                    <artifactId>httpcore</artifactId>
-                    <groupId>org.apache.httpcomponents</groupId>
-                </exclusion>
-
-                <exclusion>
-                    <groupId>org.codehaus.jackson</groupId>
-                    <artifactId>jackson-core-asl</artifactId>
-                </exclusion>
-
-                <exclusion>
-                    <groupId>org.codehaus.jackson</groupId>
-                    <artifactId>jackson-mapper-asl</artifactId>
-                </exclusion>
-
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-
-                <exclusion>
-                    <groupId>commons-lang</groupId>
-                    <artifactId>commons-lang</artifactId>
-                </exclusion>
-
-                <exclusion>
-                    <artifactId>jsr305</artifactId>
-                    <groupId>com.google.code.findbugs</groupId>
-                </exclusion>
-
-            </exclusions>
         </dependency>
-
-        <dependency>
-            <groupId>com.qcloud</groupId>
-            <artifactId>cos_api</artifactId>
-            <version>${cos_api.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${google.guava.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${commons_lang3.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -126,116 +75,75 @@
             <artifactId>jungle-udp-l5</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
-
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.2</version>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.0</version>
                 <configuration>
-                    <outputDirectory>${project.basedir}/dep</outputDirectory>
+                    <attach>true</attach>
                 </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <additionalJOption>-Xdoclint:none</additionalJOption>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>javadoc-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.1</version>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.2</version>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <id>deploy</id>
+                        <phase>deploy</phase>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>deploy</goal>
                         </goals>
-                        <configuration>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <outputDirectory>${project.basedir}/dep</outputDirectory>
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.qcloud.cos</pattern>
-                                    <shadedPattern>cosn.${project.version}.com.qcloud.cos</shadedPattern>
-                                </relocation>
+                    </execution>
+                </executions>
+            </plugin>
 
-                                <relocation>
-                                    <pattern>org.joda</pattern>
-                                    <shadedPattern>cosn.${project.version}.org.joda</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>org.bouncycastle</pattern>
-                                    <shadedPattern>cosn.${project.version}.org.bouncycastle</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>org.apache.http</pattern>
-                                    <shadedPattern>cosn.${project.version}.org.apache.http</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>org.apache.commons.logging</pattern>
-                                    <shadedPattern>cosn.${project.version}.org.apache.commons.logging</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>com.fasterxml.jackson.annotation</pattern>
-                                    <shadedPattern>cosn.${project.version}.com.fasterxml.jackson.annotation</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>com.fasterxml.jackson.core</pattern>
-                                    <shadedPattern>cosn.${project.version}.com.fasterxml.jackson.core</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>com.fasterxml.jackson.databind</pattern>
-                                    <shadedPattern>cosn.${project.version}.com.fasterxml.jackson.databind</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>org.apache.commons.codec</pattern>
-                                    <shadedPattern>cosn.${project.version}.org.apache.commons.codec</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>org.apache.commons.lang3</pattern>
-                                    <shadedPattern>cosn.${project.version}.org.apache.commons.lang3</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>org.codehaus</pattern>
-                                    <shadedPattern>cosn.${project.version}.org.codehaus</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>org.checkerframework</pattern>
-                                    <shadedPattern>cosn.${project.version}.org.checkerframework</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>com.google</pattern>
-                                    <shadedPattern>cosn.${project.version}.com.google</shadedPattern>
-                                </relocation>
-
-                            </relocations>
-
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                        <exclude>META-INF/*.SF</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-
 </project>
