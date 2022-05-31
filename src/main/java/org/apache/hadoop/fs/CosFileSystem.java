@@ -437,6 +437,7 @@ public class CosFileSystem extends FileSystem {
             CosNPartialListing listing =
                     store.list(key, this.normalBucketMaxListNum, priorLastKey, true);
             for (FileMetadata file : listing.getFiles()) {
+                checkPermission(new Path(file.getKey()), RangerAccessType.DELETE);
                 this.boundedCopyThreadPool.execute(new CosNDeleteFileTask(
                         this.store, file.getKey(), deleteFileContext));
                 deleteToFinishes++;
@@ -445,6 +446,7 @@ public class CosFileSystem extends FileSystem {
                 }
             }
             for (FileMetadata commonPrefix : listing.getCommonPrefixes()) {
+                checkPermission(new Path(commonPrefix.getKey()), RangerAccessType.DELETE);
                 this.boundedCopyThreadPool.execute(new CosNDeleteFileTask(
                         this.store, commonPrefix.getKey(), deleteFileContext));
                 deleteToFinishes++;
@@ -934,6 +936,7 @@ public class CosFileSystem extends FileSystem {
             CosNPartialListing objectList = this.store.list(srcKey,
                     this.normalBucketMaxListNum, priorLastKey, true);
             for (FileMetadata file : objectList.getFiles()) {
+                checkPermission(new Path(file.getKey()), RangerAccessType.DELETE);
                 this.boundedCopyThreadPool.execute(new CosNCopyFileTask(
                         this.store,
                         file.getKey(),
